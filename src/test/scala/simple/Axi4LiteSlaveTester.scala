@@ -8,39 +8,38 @@ import scala.util.control.Breaks._
  * Test the Axi4LiteSlave design
  */
 class Axi4LiteSlaveTester(dut: Axi4LiteSlave) extends PeekPokeTester(dut) {
-//  def f_run_instruction(op: UInt, 
-//          rd: UInt, rs1: UInt, rs2: UInt, 
-//          mem_addr: Int, imm: UInt,
-//          vector_length: Int) : Int = {
-//    poke(dut.io.valid        , 1.U          )
-//    poke(dut.io.op           , op           )
-//    poke(dut.io.rd           , rd           )
-//    poke(dut.io.rs1          , rs1          )
-//    poke(dut.io.rs2          , rs2          )
-//    poke(dut.io.mem_addr     , mem_addr     )
-//    poke(dut.io.imm          , imm          )
-//    poke(dut.io.vector_length, vector_length)
-//    step(1)
-//    poke(dut.io.valid        , 0.U          )
-//    var ready = peek(dut.io.ready)
-//    while (ready == 0){
-//      step(1)
-//      ready = peek(dut.io.ready)
-//    }
-//    return 0;
-//  }
 
-  poke(dut.io.i_WriteAddressChannel.AWVALID, 0.U)
+  var i_WriteAddressChannel = dut.io.i_WriteAddressChannel
+  var i_WriteDataChannel    = dut.io.i_WriteDataChannel
+
+  def f_axi_write(
+    WADDR: UInt, 
+    WDATA: UInt
+  ) : Int = {
+    poke(i_WriteAddressChannel.AWVALID, 1.U)
+    poke(i_WriteAddressChannel.AWADDR , WADDR)
+    poke(i_WriteDataChannel.WVALID    , 1.U)
+    poke(i_WriteDataChannel.WDATA     , WDATA)
+    step(1)
+    var awready = peek(i_WriteAddressChannel.AWREADY)
+    var wready  = peek(i_WriteDataChannel.WREADY)
+    while ((awready == 0)|(wready == 0)){
+      step(1)
+      awready = peek(i_WriteAddressChannel.AWREADY)
+      wready  = peek(i_WriteDataChannel.WREADY)
+    }
+    poke(i_WriteAddressChannel.AWVALID, 0.U)
+    poke(i_WriteAddressChannel.AWADDR , 0.U)
+    poke(i_WriteDataChannel.WVALID    , 0.U)
+    poke(i_WriteDataChannel.WDATA     , 0.U)
+    step(1)
+    return 0;
+  }
+
   step(1)
-  poke(dut.io.i_WriteAddressChannel.AWVALID, 1.U)
-  
-//  f_run_instruction(OBJ_OPCODE.OP_Nop    , REG.RD_0, REG.RS1_0, REG.RS2_0, 0x000, 0x000.U, 0)
-//  f_run_instruction(OBJ_OPCODE.OP_Loadimm, REG.RD_0, REG.RS1_0, REG.RS2_0, 0x000, 0x100.U, 4)
-//  f_run_instruction(OBJ_OPCODE.OP_Loadimm, REG.RD_4, REG.RS1_0, REG.RS2_0, 0x000, 0x200.U, 4)
-//  f_run_instruction(OBJ_OPCODE.OP_Add    , REG.RD_8, REG.RS1_0, REG.RS2_4, 0x000, 0x200.U, 4)
-//  f_run_instruction(OBJ_OPCODE.OP_Store  , REG.RD_0, REG.RS1_8, REG.RS2_0, 0x100, 0x000.U, 4)
-//  f_run_instruction(OBJ_OPCODE.OP_Load   , REG.RD_8, REG.RS1_0, REG.RS2_0, 0x100, 0x000.U, 4)
-//  f_run_instruction(OBJ_OPCODE.OP_Nop    , REG.RD_0, REG.RS1_0, REG.RS2_0, 0x000, 0x000.U, 0)
+  f_axi_write(0x1000.U, 0x1110.U)
+  f_axi_write(0x4000.U, 0x4440.U)
+  f_axi_write(0x2000.U, 0x2220.U)
   step(1)
 
 //  for (i  <- 0 to 1 by 1) {

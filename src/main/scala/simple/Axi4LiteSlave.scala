@@ -15,14 +15,33 @@ class Axi4LiteSlave extends Module {
     val i_ReadAddressChannel   = Flipped(new ReadAddressChannel)
     val i_ReadDataChannel      = Flipped(new ReadDataChannel)
   })
-  io.i_WriteAddressChannel.AWREADY := 0.U
-  io.i_WriteDataChannel.WREADY := 0.U
-  io.i_WriteResponseChannel.BRESP := 0.U
-  io.i_WriteResponseChannel.BVALID := 0.U
-  io.i_ReadAddressChannel.ARREADY := 0.U
-  io.i_ReadDataChannel.RDATA := 0.U
-  io.i_ReadDataChannel.RRESP := 0.U
-  io.i_ReadDataChannel.RVALID := 0.U
+
+  var AWADDR = io.i_WriteAddressChannel.AWADDR
+  var AWPROT = io.i_WriteAddressChannel.AWPROT
+  var AWVALID = io.i_WriteAddressChannel.AWVALID
+  var WDATA = io.i_WriteDataChannel.WDATA
+  var WSTRB = io.i_WriteDataChannel.WSTRB
+  var WVALID = io.i_WriteDataChannel.WVALID
+  var BREADY = io.i_WriteResponseChannel.BREADY
+  var ARADDR = io.i_ReadAddressChannel.ARADDR
+  var ARPROT = io.i_ReadAddressChannel.ARPROT
+  var ARVALID = io.i_ReadAddressChannel.ARVALID
+  var RREADY = io.i_ReadDataChannel.RREADY
+
+  val wrreg_4000 = RegInit(0.U(16.W))
+  when((WVALID===1.U)&(AWVALID===1.U)&(AWADDR===0x4000.U)){
+    wrreg_4000 := WDATA
+  }.otherwise {
+  }
+
+  io.i_WriteAddressChannel.AWREADY := AWVALID
+  io.i_WriteDataChannel.WREADY     := WVALID
+  io.i_WriteResponseChannel.BRESP  := 1.U
+  io.i_WriteResponseChannel.BVALID := 1.U
+  io.i_ReadAddressChannel.ARREADY  := 1.U
+  io.i_ReadDataChannel.RDATA       := 0.U
+  io.i_ReadDataChannel.RRESP       := 0.U
+  io.i_ReadDataChannel.RVALID      := 0.U
 
 }
 
