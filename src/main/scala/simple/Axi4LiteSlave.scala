@@ -39,7 +39,7 @@ class Axi4LiteSlave extends Module {
   io.i_WriteResponseChannel.BRESP  := 1.U
   io.i_WriteResponseChannel.BVALID := 1.U
   io.i_ReadAddressChannel.ARREADY  := 1.U
-  io.i_ReadDataChannel.RDATA       := 0.U
+  io.i_ReadDataChannel.RDATA       := wrreg_4000
   io.i_ReadDataChannel.RRESP       := 0.U
   io.i_ReadDataChannel.RVALID      := 0.U
 
