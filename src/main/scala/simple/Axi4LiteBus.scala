@@ -8,13 +8,7 @@ import chisel3.util._
  */
 
 class Axi4LiteBus extends Module {
-  val io = IO(new Bundle {
-    val i_WriteAddressChannel  = Flipped(new WriteAddressChannel)
-    val i_WriteDataChannel     = Flipped(new WriteDataChannel)
-    val i_WriteResponseChannel = Flipped(new WriteResponseChannel)
-    val i_ReadAddressChannel   = Flipped(new ReadAddressChannel)
-    val i_ReadDataChannel      = Flipped(new ReadDataChannel)
-  })
+  val io = IO(Flipped((new Axi4LiteIF)))
 
   var AWADDR = io.i_WriteAddressChannel.AWADDR
   var AWPROT = io.i_WriteAddressChannel.AWPROT
@@ -28,88 +22,53 @@ class Axi4LiteBus extends Module {
   var ARVALID = io.i_ReadAddressChannel.ARVALID
   var RREADY = io.i_ReadDataChannel.RREADY
 
-  val if_to_slv1_WriteAddressChannel  = Wire(new WriteAddressChannel  )
-  val if_to_slv1_WriteDataChannel     = Wire(new WriteDataChannel     )
-  val if_to_slv1_WriteResponseChannel = Wire(new WriteResponseChannel )
-  val if_to_slv1_ReadAddressChannel   = Wire(new ReadAddressChannel   )
-  val if_to_slv1_ReadDataChannel      = Wire(new ReadDataChannel      )
+  var if_to_slv1 = Wire(new Axi4LiteIF)
 
   // Axi4LiteSlave
   val i_slv1 = Module(new Axi4LiteSlave)
-  i_slv1.io.i_WriteAddressChannel  <> if_to_slv1_WriteAddressChannel 
-  i_slv1.io.i_WriteDataChannel     <> if_to_slv1_WriteDataChannel    
-  i_slv1.io.i_WriteResponseChannel <> if_to_slv1_WriteResponseChannel
-  i_slv1.io.i_ReadAddressChannel   <> if_to_slv1_ReadAddressChannel  
-  i_slv1.io.i_ReadDataChannel      <> if_to_slv1_ReadDataChannel     
+  i_slv1.io <> if_to_slv1
 
-  val if_to_slv2_WriteAddressChannel  = Wire(new WriteAddressChannel  )
-  val if_to_slv2_WriteDataChannel     = Wire(new WriteDataChannel     )
-  val if_to_slv2_WriteResponseChannel = Wire(new WriteResponseChannel )
-  val if_to_slv2_ReadAddressChannel   = Wire(new ReadAddressChannel   )
-  val if_to_slv2_ReadDataChannel      = Wire(new ReadDataChannel      )
+  var if_to_slv2 = Wire(new Axi4LiteIF)
 
   val i_slv2 = Module(new Axi4LiteSlave)
-  i_slv2.io.i_WriteAddressChannel  <> if_to_slv2_WriteAddressChannel 
-  i_slv2.io.i_WriteDataChannel     <> if_to_slv2_WriteDataChannel    
-  i_slv2.io.i_WriteResponseChannel <> if_to_slv2_WriteResponseChannel
-  i_slv2.io.i_ReadAddressChannel   <> if_to_slv2_ReadAddressChannel  
-  i_slv2.io.i_ReadDataChannel      <> if_to_slv2_ReadDataChannel     
+  i_slv2.io <> if_to_slv2
 
   // init
   val r_RDATA = RegInit(0.U(16.W))
+  val axwvalid = Wire(Bool())
+  axwvalid := (WVALID===1.U)&&(AWVALID===1.U)
 
-  when((WVALID===1.U)&(AWVALID===1.U)&(AWADDR===0x4000.U)){
+  val region_slv1 = Wire(Bool())
+  val region_slv2 = Wire(Bool())
+  region_slv1 := ((AWADDR & 0xC000.U)===OBJ_BASE_ADDR.BASE_ADDR_REGION1)
+  region_slv2 := ((AWADDR & 0xC000.U)===OBJ_BASE_ADDR.BASE_ADDR_REGION2)
+  when(axwvalid&&region_slv1){
+    if_to_slv2 := io
+    if_to_slv2.i_WriteAddressChannel.AWVALID := 0.U
+    if_to_slv2.i_WriteDataChannel.WVALID     := 0.U
+
+    if_to_slv1 <> io
+    if_to_slv1.i_WriteAddressChannel.AWADDR  := AWADDR - OBJ_BASE_ADDR.BASE_ADDR_REGION1
+    r_RDATA := if_to_slv1.i_ReadDataChannel.RDATA
   
-    if_to_slv2_WriteAddressChannel         := io.i_WriteAddressChannel  
-    if_to_slv2_WriteDataChannel            := io.i_WriteDataChannel    
-    if_to_slv2_WriteResponseChannel        := io.i_WriteResponseChannel
-    if_to_slv2_ReadAddressChannel          := io.i_ReadAddressChannel  
-    if_to_slv2_ReadDataChannel             := io.i_ReadDataChannel     
-    if_to_slv2_WriteAddressChannel.AWVALID := 0.U
-    if_to_slv2_WriteDataChannel.WVALID     := 0.U
-
-    if_to_slv1_WriteAddressChannel         <> io.i_WriteAddressChannel  
-    if_to_slv1_WriteDataChannel            <> io.i_WriteDataChannel    
-    if_to_slv1_WriteResponseChannel        <> io.i_WriteResponseChannel
-    if_to_slv1_ReadAddressChannel          <> io.i_ReadAddressChannel  
-    if_to_slv1_ReadDataChannel             <> io.i_ReadDataChannel     
-
-    r_RDATA := if_to_slv1_ReadDataChannel.RDATA
+  }.elsewhen(axwvalid && region_slv2){
+    if_to_slv1 := io
+    if_to_slv1.i_WriteAddressChannel.AWVALID := 0.U
+    if_to_slv1.i_WriteDataChannel.WVALID     := 0.U
   
-  }.elsewhen((WVALID===1.U)&(AWVALID===1.U)&(AWADDR===0xC000.U)){
-    if_to_slv1_WriteAddressChannel         := io.i_WriteAddressChannel  
-    if_to_slv1_WriteDataChannel            := io.i_WriteDataChannel    
-    if_to_slv1_WriteResponseChannel        := io.i_WriteResponseChannel
-    if_to_slv1_ReadAddressChannel          := io.i_ReadAddressChannel  
-    if_to_slv1_ReadDataChannel             := io.i_ReadDataChannel     
-    if_to_slv1_WriteAddressChannel.AWVALID := 0.U
-    if_to_slv1_WriteDataChannel.WVALID     := 0.U
-  
-    if_to_slv2_WriteAddressChannel  <> io.i_WriteAddressChannel  
-    if_to_slv2_WriteDataChannel     <> io.i_WriteDataChannel    
-    if_to_slv2_WriteResponseChannel <> io.i_WriteResponseChannel
-    if_to_slv2_ReadAddressChannel   <> io.i_ReadAddressChannel  
-    if_to_slv2_ReadDataChannel      <> io.i_ReadDataChannel     
-    if_to_slv2_WriteAddressChannel.AWADDR  := AWADDR - 0x8000.U
-
-    r_RDATA := if_to_slv2_ReadDataChannel.RDATA
+    if_to_slv2  <> io
+    if_to_slv2.i_WriteAddressChannel.AWADDR  := AWADDR - OBJ_BASE_ADDR.BASE_ADDR_REGION2
+    r_RDATA := if_to_slv2.i_ReadDataChannel.RDATA
   }.otherwise {
-    if_to_slv1_WriteAddressChannel         := io.i_WriteAddressChannel  
-    if_to_slv1_WriteDataChannel            := io.i_WriteDataChannel    
-    if_to_slv1_WriteResponseChannel        := io.i_WriteResponseChannel
-    if_to_slv1_ReadAddressChannel          := io.i_ReadAddressChannel  
-    if_to_slv1_ReadDataChannel             := io.i_ReadDataChannel     
-    if_to_slv1_WriteAddressChannel.AWVALID := 0.U
-    if_to_slv1_WriteDataChannel.WVALID     := 0.U
+    if_to_slv1 := io
+    if_to_slv1.i_WriteAddressChannel.AWVALID := 0.U
+    if_to_slv1.i_WriteDataChannel.WVALID     := 0.U
   
-    if_to_slv2_WriteAddressChannel         := io.i_WriteAddressChannel  
-    if_to_slv2_WriteDataChannel            := io.i_WriteDataChannel    
-    if_to_slv2_WriteResponseChannel        := io.i_WriteResponseChannel
-    if_to_slv2_ReadAddressChannel          := io.i_ReadAddressChannel  
-    if_to_slv2_ReadDataChannel             := io.i_ReadDataChannel     
-    if_to_slv2_WriteAddressChannel.AWVALID := 0.U
-    if_to_slv2_WriteDataChannel.WVALID     := 0.U
-    r_RDATA                                := 0.U
+    if_to_slv2 := io
+    if_to_slv2.i_WriteAddressChannel.AWVALID := 0.U
+    if_to_slv2.i_WriteDataChannel.WVALID     := 0.U
+
+    r_RDATA                                  := 0.U
   }
 
   io.i_WriteAddressChannel.AWREADY := AWVALID

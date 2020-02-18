@@ -38,10 +38,10 @@ class Axi4LiteBusTester(dut: Axi4LiteBus) extends PeekPokeTester(dut) {
 
   step(1)
   f_axi_write(0x1000.U, 0x1110.U)
-  f_axi_write(0x4000.U, 0x4440.U)
   f_axi_write(0x2000.U, 0x2220.U)
-  f_axi_write(0xC000.U, 0xCCC0.U)
   f_axi_write(0x3000.U, 0x3330.U)
+  f_axi_write(0x6000.U, 0x6660.U)
+  f_axi_write(0x4000.U, 0xfff0.U)
   step(1)
 
 //  for (i  <- 0 to 1 by 1) {

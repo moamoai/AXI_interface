@@ -5,4 +5,3 @@ test_run_dir/*
 generated/*.json
 generated/*.fir
 *bat
-generated/*.v

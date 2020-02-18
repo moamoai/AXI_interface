@@ -8,13 +8,7 @@ import chisel3.util._
  */
 
 class Axi4LiteSlave extends Module {
-  val io = IO(new Bundle {
-    val i_WriteAddressChannel  = Flipped(new WriteAddressChannel)
-    val i_WriteDataChannel     = Flipped(new WriteDataChannel)
-    val i_WriteResponseChannel = Flipped(new WriteResponseChannel)
-    val i_ReadAddressChannel   = Flipped(new ReadAddressChannel)
-    val i_ReadDataChannel      = Flipped(new ReadDataChannel)
-  })
+  val io = IO(Flipped((new Axi4LiteIF)))
 
   var AWADDR = io.i_WriteAddressChannel.AWADDR
   var AWPROT = io.i_WriteAddressChannel.AWPROT
@@ -29,7 +23,7 @@ class Axi4LiteSlave extends Module {
   var RREADY = io.i_ReadDataChannel.RREADY
 
   val wrreg_4000 = RegInit(0.U(16.W))
-  when((WVALID===1.U)&(AWVALID===1.U)&(AWADDR===0x4000.U)){
+  when((WVALID===1.U)&(AWVALID===1.U)&(AWADDR===0x2000.U)){
     wrreg_4000 := WDATA
   }.otherwise {
   }
