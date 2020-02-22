@@ -26,7 +26,7 @@ GTKWAVE = /Applications/gtkwave.app/Contents/Resources/bin/gtkwave
 view:
 	# $(GTKWAVE) ./test_run_dir/simple.Axi4LiteSlaveTester1484209783/Axi4LiteSlave.gtkw
 	# $(GTKWAVE) ./test_run_dir/simple.Axi4LiteSlaveTester1484209783/Axi4LiteSlave.vcd
-	$(GTKWAVE) ./test_run_dir/simple.Axi4LiteBusTester1084326894/Bus.gtkw
+	$(GTKWAVE) ./test_run_dir/simple.Axi4LiteBusTester1084326894/Axi4LiteTop.vcd
 
 # clean everything (including IntelliJ project settings)
 

@@ -7,7 +7,7 @@ import scala.util.control.Breaks._
 /**
  * Test the Axi4LiteSlave design
  */
-class Axi4LiteBusTester(dut: Axi4LiteBus) extends PeekPokeTester(dut) {
+class Axi4LiteBusTester(dut: Axi4LiteTop) extends PeekPokeTester(dut) {
 
   var i_WriteAddressChannel = dut.io.i_WriteAddressChannel
   var i_WriteDataChannel    = dut.io.i_WriteDataChannel
@@ -115,7 +115,7 @@ class Axi4LiteBusTester(dut: Axi4LiteBus) extends PeekPokeTester(dut) {
 
 object Axi4LiteBusTester extends App {
   println("Testing the dut")
-  iotesters.Driver.execute(Array[String]("--generate-vcd-output", "on"), () => new Axi4LiteBus()) {
+  iotesters.Driver.execute(Array[String]("--generate-vcd-output", "on"), () => new Axi4LiteTop()) {
     c => new Axi4LiteBusTester(c)
   }
 }
