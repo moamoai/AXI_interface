@@ -67,54 +67,57 @@ class Axi4LiteBus(N_MST: Int = 1,
   // var if_to_slv1 = io.if_to_slv1
   // var if_to_slv2 = io.if_to_slv2
   //var if_mstselected    = if_mstselected
-  val if_to_slv1 = Wire(new Axi4LiteIF)
-  val if_to_slv2 = Wire(new Axi4LiteIF)
+
+  val if_to_slv  = Wire(Vec(N_SLV, new Axi4LiteIF))
+  val region_slv = Wire(Vec(N_SLV, Bool()))
+  // val if_to_slv1 = Wire(new Axi4LiteIF)
+  // val if_to_slv2 = Wire(new Axi4LiteIF)
 
   val axwvalid = Wire(Bool())
   axwvalid := ((WVALID===1.U)&&(AWVALID===1.U)) | 
                (ARVALID===1.U) 
 
-  val region_slv1 = Wire(Bool())
-  val region_slv2 = Wire(Bool())
-  region_slv1 := ((AWVALID===1.U)&&((AWADDR & 0xC000.U)===OBJ_BASE_ADDR.BASE_ADDR_REGION1))|
+//  val region_slv(0) = Wire(Bool())
+//  val region_slv(1) = Wire(Bool())
+  region_slv(0) := ((AWVALID===1.U)&&((AWADDR & 0xC000.U)===OBJ_BASE_ADDR.BASE_ADDR_REGION1))|
                  ((ARVALID===1.U)&&((ARADDR & 0xC000.U)===OBJ_BASE_ADDR.BASE_ADDR_REGION1))
-  region_slv2 := ((AWVALID===1.U)&&((AWADDR & 0xC000.U)===OBJ_BASE_ADDR.BASE_ADDR_REGION2)) |
+  region_slv(1) := ((AWVALID===1.U)&&((AWADDR & 0xC000.U)===OBJ_BASE_ADDR.BASE_ADDR_REGION2)) |
                  ((ARVALID===1.U)&&((ARADDR & 0xC000.U)===OBJ_BASE_ADDR.BASE_ADDR_REGION2))
 
-  when(axwvalid&&region_slv1){
-    if_to_slv2 := if_mstselected
-    if_to_slv2.i_WriteAddressChannel.AWVALID := 0.U
-    if_to_slv2.i_WriteDataChannel.WVALID     := 0.U
+  when(axwvalid&&region_slv(0)){
+    if_to_slv(1) := if_mstselected
+    if_to_slv(1).i_WriteAddressChannel.AWVALID := 0.U
+    if_to_slv(1).i_WriteDataChannel.WVALID     := 0.U
 
-    if_to_slv1 <> if_mstselected
-    if_to_slv1.i_WriteAddressChannel.AWADDR  := AWADDR - OBJ_BASE_ADDR.BASE_ADDR_REGION1
-    if_to_slv1.i_ReadAddressChannel.ARADDR   := ARADDR - OBJ_BASE_ADDR.BASE_ADDR_REGION1
-    r_RDATA := if_to_slv1.i_ReadDataChannel.RDATA
+    if_to_slv(0) <> if_mstselected
+    if_to_slv(0).i_WriteAddressChannel.AWADDR  := AWADDR - OBJ_BASE_ADDR.BASE_ADDR_REGION1
+    if_to_slv(0).i_ReadAddressChannel.ARADDR   := ARADDR - OBJ_BASE_ADDR.BASE_ADDR_REGION1
+    r_RDATA := if_to_slv(0).i_ReadDataChannel.RDATA
   
-  }.elsewhen(axwvalid && region_slv2){
-    if_to_slv1 := if_mstselected
-    if_to_slv1.i_WriteAddressChannel.AWVALID := 0.U
-    if_to_slv1.i_WriteDataChannel.WVALID     := 0.U
+  }.elsewhen(axwvalid && region_slv(1)){
+    if_to_slv(0) := if_mstselected
+    if_to_slv(0).i_WriteAddressChannel.AWVALID := 0.U
+    if_to_slv(0).i_WriteDataChannel.WVALID     := 0.U
   
-    if_to_slv2  <> if_mstselected
-    if_to_slv2.i_WriteAddressChannel.AWADDR  := AWADDR - OBJ_BASE_ADDR.BASE_ADDR_REGION2
-    if_to_slv2.i_ReadAddressChannel.ARADDR   := ARADDR - OBJ_BASE_ADDR.BASE_ADDR_REGION2
-    r_RDATA := if_to_slv2.i_ReadDataChannel.RDATA
+    if_to_slv(1)  <> if_mstselected
+    if_to_slv(1).i_WriteAddressChannel.AWADDR  := AWADDR - OBJ_BASE_ADDR.BASE_ADDR_REGION2
+    if_to_slv(1).i_ReadAddressChannel.ARADDR   := ARADDR - OBJ_BASE_ADDR.BASE_ADDR_REGION2
+    r_RDATA := if_to_slv(1).i_ReadDataChannel.RDATA
   }.otherwise {
-    if_to_slv1 := if_mstselected
-    if_to_slv1.i_WriteAddressChannel.AWVALID := 0.U
-    if_to_slv1.i_WriteDataChannel.WVALID     := 0.U
+    if_to_slv(0) := if_mstselected
+    if_to_slv(0).i_WriteAddressChannel.AWVALID := 0.U
+    if_to_slv(0).i_WriteDataChannel.WVALID     := 0.U
   
-    if_to_slv2 := if_mstselected
-    if_to_slv2.i_WriteAddressChannel.AWVALID := 0.U
-    if_to_slv2.i_WriteDataChannel.WVALID     := 0.U
+    if_to_slv(1) := if_mstselected
+    if_to_slv(1).i_WriteAddressChannel.AWVALID := 0.U
+    if_to_slv(1).i_WriteDataChannel.WVALID     := 0.U
 
     r_RDATA                                  := 0.U
   }
 
   // Output to Slave
-  io.if_slv(0) <> if_to_slv1
-  io.if_slv(1) <> if_to_slv2
+  io.if_slv(0) <> if_to_slv(0)
+  io.if_slv(1) <> if_to_slv(1)
 
 }
 
