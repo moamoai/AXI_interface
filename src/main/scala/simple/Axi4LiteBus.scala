@@ -13,17 +13,49 @@ class BusMasterSelector(N_MST: Int = 1) extends Module{
     val if_mst  = new Axi4LiteIF
   })
 
-  var n_sel = Wire(UInt(4.W))
-  n_sel := 0.U
+  io.if_mst <> io.if_msts(0)
+  val w_if_mst_sel = Wire(Vec(N_MST, new Axi4LiteIF))
+//  io.if_mst <> w_if_mst_sel(0)
+//   w_if_mst_sel(N_MST) := io.if_msts(0)
+//   w_if_mst_sel(N_MST).i_WriteAddressChannel.AWREADY := 0.U
+//   w_if_mst_sel(N_MST).i_WriteDataChannel.WREADY     := 0.U
+//   w_if_mst_sel(N_MST).i_WriteResponseChannel.BRESP  := 0.U
+//   w_if_mst_sel(N_MST).i_WriteResponseChannel.BVALID := 0.U
+//   w_if_mst_sel(N_MST).i_ReadDataChannel.RRESP       := 0.U
+//   w_if_mst_sel(N_MST).i_ReadAddressChannel.ARREADY  := 0.U
+//   w_if_mst_sel(N_MST).i_ReadDataChannel.RVALID      := 0.U
+//   w_if_mst_sel(N_MST).i_ReadDataChannel.RREADY      := 0.U
+
   val arbtrator = for (i <- 0 until N_MST) yield {
     var AWVALID = io.if_msts(i).i_WriteAddressChannel.AWVALID
     var ARVALID = io.if_msts(i).i_ReadAddressChannel.ARVALID
-    when((AWVALID===1.U) || (ARVALID===1.U)){
-      n_sel := i.U;
+
+    if(i!=0){
+      io.if_msts(i).i_WriteAddressChannel.AWREADY := 0.U
+      io.if_msts(i).i_WriteDataChannel.WREADY     := 0.U
+      io.if_msts(i).i_WriteResponseChannel.BRESP  := 0.U
+      io.if_msts(i).i_WriteResponseChannel.BVALID := 0.U
+      io.if_msts(i).i_ReadDataChannel.RRESP       := 0.U
+      io.if_msts(i).i_ReadAddressChannel.ARREADY  := 0.U
+      io.if_msts(i).i_ReadDataChannel.RVALID      := 0.U
+      io.if_msts(i).i_ReadDataChannel.RDATA       := 0.U
     }
+    w_if_mst_sel(i) := io.if_msts(i)
+    w_if_mst_sel(i).i_WriteAddressChannel.AWREADY := 0.U
+    w_if_mst_sel(i).i_WriteDataChannel.WREADY     := 0.U
+    w_if_mst_sel(i).i_WriteResponseChannel.BRESP  := 0.U
+    w_if_mst_sel(i).i_WriteResponseChannel.BVALID := 0.U
+    w_if_mst_sel(i).i_ReadDataChannel.RRESP       := 0.U
+    w_if_mst_sel(i).i_ReadAddressChannel.ARREADY  := 0.U
+    w_if_mst_sel(i).i_ReadDataChannel.RVALID      := 0.U
+    w_if_mst_sel(i).i_ReadDataChannel.RDATA       := 0.U
+
+    // w_if_mst_sel(i) <> w_if_mst_sel(i+1)
+//    when((AWVALID===1.U) || (ARVALID===1.U)){
+//      w_if_mst_sel(i) <> io.if_msts(i)
+//    }.otherwise {
+//    }
   }
-  io.if_mst <> io.if_msts(n_sel)
-  //io.if_mst <> io.if_msts(0)
 }
 
 class Axi4LiteBus(N_MST: Int = 1,
@@ -77,48 +109,22 @@ class Axi4LiteBus(N_MST: Int = 1,
   axwvalid := ((WVALID===1.U)&&(AWVALID===1.U)) | 
                (ARVALID===1.U) 
 
-//  val region_slv(0) = Wire(Bool())
-//  val region_slv(1) = Wire(Bool())
-  region_slv(0) := ((AWVALID===1.U)&&((AWADDR & 0xC000.U)===OBJ_BASE_ADDR.BASE_ADDR_REGION1))|
-                 ((ARVALID===1.U)&&((ARADDR & 0xC000.U)===OBJ_BASE_ADDR.BASE_ADDR_REGION1))
-  region_slv(1) := ((AWVALID===1.U)&&((AWADDR & 0xC000.U)===OBJ_BASE_ADDR.BASE_ADDR_REGION2)) |
-                 ((ARVALID===1.U)&&((ARADDR & 0xC000.U)===OBJ_BASE_ADDR.BASE_ADDR_REGION2))
-
-  when(axwvalid&&region_slv(0)){
-    if_to_slv(1) := if_mstselected
-    if_to_slv(1).i_WriteAddressChannel.AWVALID := 0.U
-    if_to_slv(1).i_WriteDataChannel.WVALID     := 0.U
-
-    if_to_slv(0) <> if_mstselected
-    if_to_slv(0).i_WriteAddressChannel.AWADDR  := AWADDR - OBJ_BASE_ADDR.BASE_ADDR_REGION1
-    if_to_slv(0).i_ReadAddressChannel.ARADDR   := ARADDR - OBJ_BASE_ADDR.BASE_ADDR_REGION1
-    r_RDATA := if_to_slv(0).i_ReadDataChannel.RDATA
-  
-  }.elsewhen(axwvalid && region_slv(1)){
-    if_to_slv(0) := if_mstselected
-    if_to_slv(0).i_WriteAddressChannel.AWVALID := 0.U
-    if_to_slv(0).i_WriteDataChannel.WVALID     := 0.U
-  
-    if_to_slv(1)  <> if_mstselected
-    if_to_slv(1).i_WriteAddressChannel.AWADDR  := AWADDR - OBJ_BASE_ADDR.BASE_ADDR_REGION2
-    if_to_slv(1).i_ReadAddressChannel.ARADDR   := ARADDR - OBJ_BASE_ADDR.BASE_ADDR_REGION2
-    r_RDATA := if_to_slv(1).i_ReadDataChannel.RDATA
-  }.otherwise {
-    if_to_slv(0) := if_mstselected
-    if_to_slv(0).i_WriteAddressChannel.AWVALID := 0.U
-    if_to_slv(0).i_WriteDataChannel.WVALID     := 0.U
-  
-    if_to_slv(1) := if_mstselected
-    if_to_slv(1).i_WriteAddressChannel.AWVALID := 0.U
-    if_to_slv(1).i_WriteDataChannel.WVALID     := 0.U
-
-    r_RDATA                                  := 0.U
+  val switcher = for (i <- 0 until N_SLV) yield {
+    region_slv(i) := ((AWVALID===1.U)&&((AWADDR & 0xFC000.U)===(0x4000.U * i.U))) |
+                     ((ARVALID===1.U)&&((ARADDR & 0xFC000.U)===(0x4000.U * i.U)))
+    when(axwvalid&&region_slv(i)){
+      if_to_slv(i) <> if_mstselected
+      if_to_slv(i).i_WriteAddressChannel.AWADDR  := AWADDR - (0x4000.U * i.U)
+      if_to_slv(i).i_ReadAddressChannel.ARADDR   := ARADDR - (0x4000.U * i.U)
+      r_RDATA := if_to_slv(i).i_ReadDataChannel.RDATA
+    }.otherwise {
+      if_to_slv(i) := if_mstselected
+      if_to_slv(i).i_WriteAddressChannel.AWVALID := 0.U
+      if_to_slv(i).i_WriteDataChannel.WVALID     := 0.U
+    }
+    // Output to Slave
+    io.if_slv(i) <> if_to_slv(i)
   }
-
-  // Output to Slave
-  io.if_slv(0) <> if_to_slv(0)
-  io.if_slv(1) <> if_to_slv(1)
-
 }
 
 // Generate the Verilog code by invoking the Driver
@@ -126,4 +132,3 @@ object Axi4LiteBusMain extends App {
   println("Generating the Axi4LiteBus hardware")
   chisel3.Driver.execute(Array("--target-dir", "generated"), () => new Axi4LiteBus())
 }
-

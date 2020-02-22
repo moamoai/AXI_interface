@@ -19,6 +19,8 @@ axi4-lite-slave-test:
 
 bus:
 	$(SBT) "runMain simple.Axi4LiteBusMain"
+top:
+	$(SBT) "runMain simple.Axi4LiteTopMain"
 bus-test:
 	$(SBT) "test:runMain simple.Axi4LiteBusTester --backend-name verilator"
 
@@ -26,7 +28,8 @@ GTKWAVE = /Applications/gtkwave.app/Contents/Resources/bin/gtkwave
 view:
 	# $(GTKWAVE) ./test_run_dir/simple.Axi4LiteSlaveTester1484209783/Axi4LiteSlave.gtkw
 	# $(GTKWAVE) ./test_run_dir/simple.Axi4LiteSlaveTester1484209783/Axi4LiteSlave.vcd
-	$(GTKWAVE) ./test_run_dir/simple.Axi4LiteBusTester1084326894/Axi4LiteTop.vcd
+	# $(GTKWAVE) ./test_run_dir/simple.Axi4LiteBusTester1084326894/Axi4LiteTop.vcd
+	$(GTKWAVE) ./test_run_dir/simple.Axi4LiteBusTester1084326894/Top.gtkw
 
 # clean everything (including IntelliJ project settings)
 

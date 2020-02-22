@@ -7,3 +7,4 @@ generated/*.fir
 *bat
 generated/Axi4LiteSlaveIFM.v
 generated/Axi4LiteSlave.v
+generated/Axi4LiteTop.v
