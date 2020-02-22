@@ -11,6 +11,9 @@ SBT = sbt
 axi4-lite-slave:
 	$(SBT) "runMain simple.Axi4LiteSlaveMain"
 
+slaveifm:
+	$(SBT) "runMain simple.Axi4LiteSlaveIFMMain"
+
 axi4-lite-slave-test:
 	$(SBT) "test:runMain simple.Axi4LiteSlaveTester --backend-name verilator"
 
@@ -23,7 +26,7 @@ GTKWAVE = /Applications/gtkwave.app/Contents/Resources/bin/gtkwave
 view:
 	# $(GTKWAVE) ./test_run_dir/simple.Axi4LiteSlaveTester1484209783/Axi4LiteSlave.gtkw
 	# $(GTKWAVE) ./test_run_dir/simple.Axi4LiteSlaveTester1484209783/Axi4LiteSlave.vcd
-	$(GTKWAVE) ./test_run_dir/simple.Axi4LiteBusTester1084326894/Axi4LiteBus.vcd
+	$(GTKWAVE) ./test_run_dir/simple.Axi4LiteBusTester1084326894/Bus.gtkw
 
 # clean everything (including IntelliJ project settings)
 

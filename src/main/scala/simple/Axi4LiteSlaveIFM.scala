@@ -36,13 +36,19 @@ class Axi4LiteSlaveIFM extends Module {
   io.i_axi.i_WriteResponseChannel.BRESP  := 1.U
   io.i_axi.i_WriteResponseChannel.BVALID := 1.U
   io.i_axi.i_ReadAddressChannel.ARREADY  := 1.U
-  io.i_axi.i_ReadDataChannel.RDATA       := 0.U
+  io.i_axi.i_ReadDataChannel.RDATA       := io.i_int.rdata
   io.i_axi.i_ReadDataChannel.RRESP       := 0.U
-  io.i_axi.i_ReadDataChannel.RVALID      := 0.U
+  io.i_axi.i_ReadDataChannel.RVALID      := io.i_int.ready
+  val addr = Wire(UInt(16.W))
+  when (AWVALID===1.U){
+    addr := AWADDR
+  }.otherwise{
+    addr := ARADDR
+  }
 
   io.i_int.enable := (AWVALID & WVALID)
   io.i_int.we     := WVALID
-  io.i_int.addr   := AWADDR
+  io.i_int.addr   := addr
   io.i_int.wdata  := WDATA
   io.i_int.wstrb  := WSTRB
 
