@@ -38,10 +38,11 @@ class WRREG(DATA_WIDTH: Int = 16) extends Module {
 
 }
 
-class RegsM extends Module {
+class RegsM(num_regs: Int = 4) extends Module {
 
   val io     = IO(new Bundle {
     val i_int = Flipped(new InternaIF)
+    val outs  = Output(Vec(num_regs, UInt(16.W)))
   })
 
   val enable = io.i_int.enable
@@ -62,24 +63,25 @@ class RegsM extends Module {
   val out = Wire(UInt(16.W))
   out := i_wrreg.io.out
 
-  val num_regs = 4
+  // val num_regs = 4
   // val readys = Wire(VecInit(Seq.fill(4)(UInt(1.W))))
   // val readys = Wire(UInt(4.W))
   val readys = Wire(Vec(num_regs, UInt(1.W)))
   val rdatas = Wire(Vec(num_regs, UInt(16.W)))
   val outs   = Wire(Vec(num_regs, UInt(16.W)))
 
-  val my_args  = Seq(1,2,3,4)
+  val my_args  = Seq(0,1,2,3)
   val regs = for (i <- 0 until num_regs) yield {
      val i_wrreg = Module(new WRREG(16)) // args = my_args(i)
      i_wrreg.io.i_if        <> if_reg
-     i_wrreg.io.i_if.enable := (addr === ((my_args(i)).U * 0x1000.U))
+     i_wrreg.io.i_if.enable := (addr === (i.U * 0x4.U)) //((my_args(i)).U * 0x4.U))
 
-     readys(i) := i_wrreg.io.i_if.ready 
-     rdatas(i) := i_wrreg.io.i_if.rdata
+     readys(i)  := i_wrreg.io.i_if.ready 
+     rdatas(i)  := i_wrreg.io.i_if.rdata
      outs(i)    := i_wrreg.io.out
   }
 
+  io.outs := outs
   io.i_int.rdata := rdatas.reduce(_ | _) // i_wrreg.io.i_if.rdata
   io.i_int.ready := readys.reduce(_ | _) // i_wrreg.io.i_if.ready
 

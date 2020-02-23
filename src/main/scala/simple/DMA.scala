@@ -22,14 +22,14 @@ class DMA extends Module{
 //  io.if_mst := r_ff
 
   // io.if_mst <> io.if_slv
-  io.if_slv.i_WriteAddressChannel.AWREADY := 0.U
-  io.if_slv.i_WriteDataChannel.WREADY     := 0.U
-  io.if_slv.i_WriteResponseChannel.BRESP  := 0.U
-  io.if_slv.i_WriteResponseChannel.BVALID := 0.U
-  io.if_slv.i_ReadDataChannel.RRESP       := 0.U
-  io.if_slv.i_ReadAddressChannel.ARREADY  := 0.U
-  io.if_slv.i_ReadDataChannel.RVALID      := 0.U
-  io.if_slv.i_ReadDataChannel.RDATA       := 0.U
+//  io.if_slv.i_WriteAddressChannel.AWREADY := 0.U
+//  io.if_slv.i_WriteDataChannel.WREADY     := 0.U
+//  io.if_slv.i_WriteResponseChannel.BRESP  := 0.U
+//  io.if_slv.i_WriteResponseChannel.BVALID := 0.U
+//  io.if_slv.i_ReadDataChannel.RRESP       := 0.U
+//  io.if_slv.i_ReadAddressChannel.ARREADY  := 0.U
+//  io.if_slv.i_ReadDataChannel.RVALID      := 0.U
+//  io.if_slv.i_ReadDataChannel.RDATA       := 0.U
 
   io.if_mst.i_WriteAddressChannel.AWADDR  := 0.U
   io.if_mst.i_WriteAddressChannel.AWPROT  := 0.U

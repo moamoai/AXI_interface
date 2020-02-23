@@ -86,13 +86,13 @@ class BusMasterSelector(N_MST: Int = 1) extends Module{
       w_if_mst_sel(i+1).i_ReadDataChannel.RVALID      := w_if_mst_sel(i).i_ReadDataChannel.RVALID     
       w_if_mst_sel(i+1).i_ReadDataChannel.RDATA       := w_if_mst_sel(i).i_ReadDataChannel.RDATA      
 
-      io.if_msts(i).i_WriteAddressChannel.AWREADY := 1.U
-      io.if_msts(i).i_WriteDataChannel.WREADY     := 1.U
+      io.if_msts(i).i_WriteAddressChannel.AWREADY := 0.U
+      io.if_msts(i).i_WriteDataChannel.WREADY     := 0.U
       io.if_msts(i).i_WriteResponseChannel.BRESP  := 0.U
       io.if_msts(i).i_WriteResponseChannel.BVALID := 0.U
       io.if_msts(i).i_ReadDataChannel.RRESP       := 0.U
-      io.if_msts(i).i_ReadAddressChannel.ARREADY  := 1.U
-      io.if_msts(i).i_ReadDataChannel.RVALID      := 1.U
+      io.if_msts(i).i_ReadAddressChannel.ARREADY  := 0.U
+      io.if_msts(i).i_ReadDataChannel.RVALID      := 0.U
       io.if_msts(i).i_ReadDataChannel.RDATA       := 0xFFFF.U
 
     }

@@ -62,30 +62,45 @@ class Axi4LiteBusTester(dut: Axi4LiteTop) extends PeekPokeTester(dut) {
     return 0;
   }
 
+  def f_write_read_test(
+    addr : Int, 
+    len  : Int
+  ) : Int = {
+    var test_addr  = 0
+    var wdata = 0
+    var rdata = f_axi_read (0.U) 
+    step(1)
+    for (i <- 0 to (len-1)){
+      test_addr = addr   + 4 * i
+      wdata     = test_addr
+      f_axi_write(test_addr.U, wdata.U)
+      rdata = f_axi_read (test_addr.U)
+      if(rdata != wdata){
+       println(f"[NG] test_addr[0x$test_addr%08x] wdata[0x$wdata%08x] rdata[0x$rdata%08x]");
+      }
+    }
+    return 0
+  }
 
-  var rdata = f_axi_read (0x0000.U)
+  var rdata = f_axi_read (0.U) 
+  // slv0
+  f_write_read_test(0x0, 0x4)
+//  f_write_read_test(0x10, 0x4)
+  // slv1
+  f_write_read_test(0x4000, 0x4)
+  f_write_read_test(0x6000, 0x4)
+  // slv2
+  f_write_read_test(0x8000, 0x4)
+  //f_write_read_test(0x8010, 0x4)
 
-  step(1)
-  f_axi_write(0x1000.U, 0x1110.U)
-  rdata = f_axi_read (0x1000.U)
-  println(f"rdata[0x$rdata%08x]");
-
-  f_axi_write(0x2000.U, 0x2220.U)
-  rdata = f_axi_read (0x2000.U)
-  println(f"rdata[0x$rdata%08x]");
-
-  f_axi_write(0x3000.U, 0x3330.U)
-  rdata = f_axi_read (0x3000.U)
-  println(f"rdata[0x$rdata%08x]");
-
-  f_axi_write(0x6000.U, 0x6660.U)
-  rdata = f_axi_read (0x6000.U)
-  println(f"rdata[0x$rdata%08x]");
-
-  f_axi_write(0x4000.U, 0xfff0.U)
-  rdata = f_axi_read (0x4000.U)
-  println(f"rdata[0x$rdata%08x]");
-  step(1)
+//  f_axi_write(0x6000.U, 0x6660.U)
+//  rdata = f_axi_read (0x6000.U)
+//  println(f"rdata[0x$rdata%08x]");
+//
+//  f_axi_write(0x4000.U, 0xfff0.U)
+//  rdata = f_axi_read (0x4000.U)
+//  println(f"rdata[0x$rdata%08x]");
+//  step(1)
 
 //  for (i  <- 0 to 1 by 1) {
 //    for (j <- 1 to 1) {
