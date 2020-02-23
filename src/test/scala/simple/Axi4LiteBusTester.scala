@@ -81,26 +81,37 @@ class Axi4LiteBusTester(dut: Axi4LiteTop) extends PeekPokeTester(dut) {
     }
     return 0
   }
+  def test_0101(): Int ={
+    // slv0
+    f_write_read_test(0x0, 0x4)
+    //  f_write_read_test(0x10, 0x4)
+    // slv1
+    f_write_read_test(0x4000, 0x4)
+    f_write_read_test(0x6000, 0x4)
+    // slv2
+    f_write_read_test(0x8000, 0x4)
+    //f_write_read_test(0x8010, 0x4)
+    return 0;
+  }
+  def dma_transfer(
+    src : Int, 
+    dst : Int,
+    len : Int
+  ): Int ={
+    var DMA_BASE = 0x8000
+    f_axi_write((DMA_BASE + 0x00).U, src.U)
+    f_axi_write((DMA_BASE + 0x04).U, dst.U)
+    f_axi_write((DMA_BASE + 0x08).U, len.U)
+    f_axi_write((DMA_BASE + 0x0C).U, 1.U)
+    f_axi_write((DMA_BASE + 0x0C).U, 0.U)
+    return 0
+  }
+  // Read Write Test
+  // test_0101()
 
-  var rdata = f_axi_read (0.U) 
-  // slv0
-  f_write_read_test(0x0, 0x4)
-//  f_write_read_test(0x10, 0x4)
-  // slv1
-  f_write_read_test(0x4000, 0x4)
-  f_write_read_test(0x6000, 0x4)
-  // slv2
-  f_write_read_test(0x8000, 0x4)
-  //f_write_read_test(0x8010, 0x4)
+  // DMA Transfer
+  dma_transfer(0x4000, 0x5000, 0x4)
 
-//  f_axi_write(0x6000.U, 0x6660.U)
-//  rdata = f_axi_read (0x6000.U)
-//  println(f"rdata[0x$rdata%08x]");
-//
-//  f_axi_write(0x4000.U, 0xfff0.U)
-//  rdata = f_axi_read (0x4000.U)
-//  println(f"rdata[0x$rdata%08x]");
-//  step(1)
 
 //  for (i  <- 0 to 1 by 1) {
 //    for (j <- 1 to 1) {

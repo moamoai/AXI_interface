@@ -13,34 +13,27 @@ class DMA extends Module{
     val if_mst  = new Axi4LiteIF
   })
   val i_ifm  = Module(new Axi4LiteSlaveIFM)
-  val i_regs = Module(new RegsM)
+  val i_regs = Module(new RegsM(4))
   i_ifm.io.i_axi <> io.if_slv
   i_ifm.io.i_int <> i_regs.io.i_int
 
-//  val r_ff  = RegInit(0.U.asTypeOf(new Axi4LiteIF))
-//  r_ff  := io.if_slv
-//  io.if_mst := r_ff
+  val src  = Wire(UInt(16.W)) // i_regs.io.outs(0)
+  val dst  = Wire(UInt(16.W)) // i_regs.io.outs(1)
+  val len  = Wire(UInt(16.W)) // i_regs.io.outs(2)
+  val kick = Wire(UInt(16.W)) // i_regs.io.outs(3)
+  src  := i_regs.io.outs(0)
+  dst  := i_regs.io.outs(1)
+  len  := i_regs.io.outs(2)
+  kick := i_regs.io.outs(3)
 
-  // io.if_mst <> io.if_slv
-//  io.if_slv.i_WriteAddressChannel.AWREADY := 0.U
-//  io.if_slv.i_WriteDataChannel.WREADY     := 0.U
-//  io.if_slv.i_WriteResponseChannel.BRESP  := 0.U
-//  io.if_slv.i_WriteResponseChannel.BVALID := 0.U
-//  io.if_slv.i_ReadDataChannel.RRESP       := 0.U
-//  io.if_slv.i_ReadAddressChannel.ARREADY  := 0.U
-//  io.if_slv.i_ReadDataChannel.RVALID      := 0.U
-//  io.if_slv.i_ReadDataChannel.RDATA       := 0.U
+  val i_mifm  = Module(new Axi4LiteMasterIFM)
+  io.if_mst        <> i_mifm.io.if_axi
 
-  io.if_mst.i_WriteAddressChannel.AWADDR  := 0.U
-  io.if_mst.i_WriteAddressChannel.AWPROT  := 0.U
-  io.if_mst.i_WriteAddressChannel.AWVALID := 0.U
-  io.if_mst.i_WriteDataChannel.WDATA      := 0.U
-  io.if_mst.i_WriteDataChannel.WSTRB      := 0.U
-  io.if_mst.i_WriteDataChannel.WVALID     := 0.U
-  io.if_mst.i_WriteResponseChannel.BREADY := 0.U
-  io.if_mst.i_ReadAddressChannel.ARADDR   := 0.U
-  io.if_mst.i_ReadAddressChannel.ARPROT   := 0.U
-  io.if_mst.i_ReadAddressChannel.ARVALID  := 0.U
-  io.if_mst.i_ReadDataChannel.RREADY      := 0.U
+  val i_trans  = Module(new DMATransferM)
+  i_trans.io.src  := src
+  i_trans.io.dst  := dst
+  i_trans.io.len  := len
+  i_trans.io.kick := kick
+  i_trans.io.if_int <> i_mifm.io.if_int
 
 }
