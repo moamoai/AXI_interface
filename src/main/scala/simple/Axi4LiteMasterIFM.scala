@@ -19,6 +19,18 @@ class Axi4LiteMasterIFM extends Module {
   var wdata  = io.if_int.wdata
   var wstrb  = io.if_int.wstrb
 
+//  io.if_axi.i_WriteAddressChannel.AWADDR  := 0.U
+//  io.if_axi.i_WriteAddressChannel.AWPROT  := 0.U
+//  io.if_axi.i_WriteAddressChannel.AWVALID := 0.U
+//  io.if_axi.i_WriteDataChannel.WDATA      := 0.U
+//  io.if_axi.i_WriteDataChannel.WSTRB      := 0.U
+//  io.if_axi.i_WriteDataChannel.WVALID     := 0.U
+//  io.if_axi.i_WriteResponseChannel.BREADY := 0.U
+//  io.if_axi.i_ReadAddressChannel.ARADDR   := 0.U
+//  io.if_axi.i_ReadAddressChannel.ARPROT   := 0.U
+//  io.if_axi.i_ReadAddressChannel.ARVALID  := 0.U
+//  io.if_axi.i_ReadDataChannel.RREADY      := 0.U
+
   io.if_axi.i_WriteAddressChannel.AWADDR  := addr
   io.if_axi.i_WriteAddressChannel.AWPROT  := 0.U
   io.if_axi.i_WriteAddressChannel.AWVALID := enable & (we === 1.U) 
@@ -42,19 +54,7 @@ class Axi4LiteMasterIFM extends Module {
 
   // Output
   io.if_int.rdata := RDATA
-  io.if_int.ready := AWREADY | WREADY | BREADY
-
-  io.if_axi.i_WriteAddressChannel.AWADDR  := 0.U
-  io.if_axi.i_WriteAddressChannel.AWPROT  := 0.U
-  io.if_axi.i_WriteAddressChannel.AWVALID := 0.U
-  io.if_axi.i_WriteDataChannel.WDATA      := 0.U
-  io.if_axi.i_WriteDataChannel.WSTRB      := 0.U
-  io.if_axi.i_WriteDataChannel.WVALID     := 0.U
-  io.if_axi.i_WriteResponseChannel.BREADY := 0.U
-  io.if_axi.i_ReadAddressChannel.ARADDR   := 0.U
-  io.if_axi.i_ReadAddressChannel.ARPROT   := 0.U
-  io.if_axi.i_ReadAddressChannel.ARVALID  := 0.U
-  io.if_axi.i_ReadDataChannel.RREADY      := 0.U
+  io.if_int.ready := RVALID | AWREADY | WREADY | BREADY
 
 //  val addr = Wire(UInt(16.W))
 //  when (AWVALID===1.U){

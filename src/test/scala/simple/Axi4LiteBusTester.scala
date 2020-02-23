@@ -109,8 +109,15 @@ class Axi4LiteBusTester(dut: Axi4LiteTop) extends PeekPokeTester(dut) {
   // Read Write Test
   // test_0101()
 
+  f_axi_write(0x4000.U, 0x1234.U)
+
   // DMA Transfer
   dma_transfer(0x4000, 0x5000, 0x4)
+  step(10)
+  var rdata = f_axi_read(0x4000.U)
+  println(f"DMA rdata[0x$rdata%08x]");
+      rdata = f_axi_read(0x5000.U)
+  println(f"DMA rdata[0x$rdata%08x]");
 
 
 //  for (i  <- 0 to 1 by 1) {
