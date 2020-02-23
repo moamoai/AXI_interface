@@ -13,48 +13,89 @@ class BusMasterSelector(N_MST: Int = 1) extends Module{
     val if_mst  = new Axi4LiteIF
   })
 
-  io.if_mst <> io.if_msts(0)
+  //io.if_mst <> io.if_msts(0)
   val w_if_mst_sel = Wire(Vec(N_MST, new Axi4LiteIF))
-//  io.if_mst <> w_if_mst_sel(0)
-//   w_if_mst_sel(N_MST) := io.if_msts(0)
-//   w_if_mst_sel(N_MST).i_WriteAddressChannel.AWREADY := 0.U
-//   w_if_mst_sel(N_MST).i_WriteDataChannel.WREADY     := 0.U
-//   w_if_mst_sel(N_MST).i_WriteResponseChannel.BRESP  := 0.U
-//   w_if_mst_sel(N_MST).i_WriteResponseChannel.BVALID := 0.U
-//   w_if_mst_sel(N_MST).i_ReadDataChannel.RRESP       := 0.U
-//   w_if_mst_sel(N_MST).i_ReadAddressChannel.ARREADY  := 0.U
-//   w_if_mst_sel(N_MST).i_ReadDataChannel.RVALID      := 0.U
-//   w_if_mst_sel(N_MST).i_ReadDataChannel.RREADY      := 0.U
+  io.if_mst <> w_if_mst_sel(0)
+  // w_if_mst_sel(N_MST-1) <> io.if_msts(0)
+  w_if_mst_sel(N_MST-1) <> io.if_msts(N_MST-1)
 
-  val arbtrator = for (i <- 0 until N_MST) yield {
+  val r_mstsel = RegInit(VecInit(Seq.fill(N_MST)(0.U(1.W))))
+
+  val arbtrator = for (i <- 0 until N_MST-1) yield {
     var AWVALID = io.if_msts(i).i_WriteAddressChannel.AWVALID
     var ARVALID = io.if_msts(i).i_ReadAddressChannel.ARVALID
+    var RVALID  = io.if_msts(i).i_ReadDataChannel.RVALID
+    // val r_mstsel = RegInit(0.U(1.W))
+    when(ARVALID===1.U){
+      r_mstsel(i) := 1.U
+    }.elsewhen((r_mstsel(i)===1.U)&&(RVALID===1.U)){
+      r_mstsel(i) := 0.U
+    }
 
-    if(i!=0){
-      io.if_msts(i).i_WriteAddressChannel.AWREADY := 0.U
-      io.if_msts(i).i_WriteDataChannel.WREADY     := 0.U
+    // w_if_mst_sel(i) <> w_if_mst_sel(i+1)
+    // when((AWVALID===1.U) || (ARVALID===1.U)){
+    when((AWVALID===1.U) || (ARVALID===1.U) || (r_mstsel(i)===1.U)){
+      w_if_mst_sel(i).i_WriteAddressChannel.AWADDR  := io.if_msts(i).i_WriteAddressChannel.AWADDR
+      w_if_mst_sel(i).i_WriteAddressChannel.AWPROT  := io.if_msts(i).i_WriteAddressChannel.AWPROT
+      w_if_mst_sel(i).i_WriteAddressChannel.AWVALID := io.if_msts(i).i_WriteAddressChannel.AWVALID
+      w_if_mst_sel(i).i_WriteDataChannel.WDATA      := io.if_msts(i).i_WriteDataChannel.WDATA
+      w_if_mst_sel(i).i_WriteDataChannel.WSTRB      := io.if_msts(i).i_WriteDataChannel.WSTRB
+      w_if_mst_sel(i).i_WriteDataChannel.WVALID     := io.if_msts(i).i_WriteDataChannel.WVALID
+      w_if_mst_sel(i).i_WriteResponseChannel.BREADY := io.if_msts(i).i_WriteResponseChannel.BREADY
+      w_if_mst_sel(i).i_ReadAddressChannel.ARADDR   := io.if_msts(i).i_ReadAddressChannel.ARADDR
+      w_if_mst_sel(i).i_ReadAddressChannel.ARPROT   := io.if_msts(i).i_ReadAddressChannel.ARPROT
+      w_if_mst_sel(i).i_ReadAddressChannel.ARVALID  := io.if_msts(i).i_ReadAddressChannel.ARVALID
+      w_if_mst_sel(i).i_ReadDataChannel.RREADY      := io.if_msts(i).i_ReadDataChannel.RREADY
+
+      io.if_msts(i).i_WriteAddressChannel.AWREADY := w_if_mst_sel(i).i_WriteAddressChannel.AWREADY
+      io.if_msts(i).i_WriteDataChannel.WREADY     := w_if_mst_sel(i).i_WriteDataChannel.WREADY    
+      io.if_msts(i).i_WriteResponseChannel.BRESP  := w_if_mst_sel(i).i_WriteResponseChannel.BRESP 
+      io.if_msts(i).i_WriteResponseChannel.BVALID := w_if_mst_sel(i).i_WriteResponseChannel.BVALID
+      io.if_msts(i).i_ReadDataChannel.RRESP       := w_if_mst_sel(i).i_ReadDataChannel.RRESP      
+      io.if_msts(i).i_ReadAddressChannel.ARREADY  := w_if_mst_sel(i).i_ReadAddressChannel.ARREADY 
+      io.if_msts(i).i_ReadDataChannel.RVALID      := w_if_mst_sel(i).i_ReadDataChannel.RVALID     
+      io.if_msts(i).i_ReadDataChannel.RDATA       := w_if_mst_sel(i).i_ReadDataChannel.RDATA      
+
+      w_if_mst_sel(i+1).i_WriteAddressChannel.AWREADY := 0.U
+      w_if_mst_sel(i+1).i_WriteDataChannel.WREADY     := 0.U
+      w_if_mst_sel(i+1).i_WriteResponseChannel.BRESP  := 0.U
+      w_if_mst_sel(i+1).i_WriteResponseChannel.BVALID := 0.U
+      w_if_mst_sel(i+1).i_ReadDataChannel.RRESP       := 0.U
+      w_if_mst_sel(i+1).i_ReadAddressChannel.ARREADY  := 0.U
+      w_if_mst_sel(i+1).i_ReadDataChannel.RVALID      := 0.U
+      w_if_mst_sel(i+1).i_ReadDataChannel.RDATA       := 0.U
+    }.otherwise {
+      w_if_mst_sel(i).i_WriteAddressChannel.AWADDR  := w_if_mst_sel(i+1).i_WriteAddressChannel.AWADDR
+      w_if_mst_sel(i).i_WriteAddressChannel.AWPROT  := w_if_mst_sel(i+1).i_WriteAddressChannel.AWPROT
+      w_if_mst_sel(i).i_WriteAddressChannel.AWVALID := w_if_mst_sel(i+1).i_WriteAddressChannel.AWVALID
+      w_if_mst_sel(i).i_WriteDataChannel.WDATA      := w_if_mst_sel(i+1).i_WriteDataChannel.WDATA
+      w_if_mst_sel(i).i_WriteDataChannel.WSTRB      := w_if_mst_sel(i+1).i_WriteDataChannel.WSTRB
+      w_if_mst_sel(i).i_WriteDataChannel.WVALID     := w_if_mst_sel(i+1).i_WriteDataChannel.WVALID
+      w_if_mst_sel(i).i_WriteResponseChannel.BREADY := w_if_mst_sel(i+1).i_WriteResponseChannel.BREADY
+      w_if_mst_sel(i).i_ReadAddressChannel.ARADDR   := w_if_mst_sel(i+1).i_ReadAddressChannel.ARADDR
+      w_if_mst_sel(i).i_ReadAddressChannel.ARPROT   := w_if_mst_sel(i+1).i_ReadAddressChannel.ARPROT
+      w_if_mst_sel(i).i_ReadAddressChannel.ARVALID  := w_if_mst_sel(i+1).i_ReadAddressChannel.ARVALID
+      w_if_mst_sel(i).i_ReadDataChannel.RREADY      := w_if_mst_sel(i+1).i_ReadDataChannel.RREADY
+
+      w_if_mst_sel(i+1).i_WriteAddressChannel.AWREADY := w_if_mst_sel(i).i_WriteAddressChannel.AWREADY
+      w_if_mst_sel(i+1).i_WriteDataChannel.WREADY     := w_if_mst_sel(i).i_WriteDataChannel.WREADY    
+      w_if_mst_sel(i+1).i_WriteResponseChannel.BRESP  := w_if_mst_sel(i).i_WriteResponseChannel.BRESP 
+      w_if_mst_sel(i+1).i_WriteResponseChannel.BVALID := w_if_mst_sel(i).i_WriteResponseChannel.BVALID
+      w_if_mst_sel(i+1).i_ReadDataChannel.RRESP       := w_if_mst_sel(i).i_ReadDataChannel.RRESP      
+      w_if_mst_sel(i+1).i_ReadAddressChannel.ARREADY  := w_if_mst_sel(i).i_ReadAddressChannel.ARREADY 
+      w_if_mst_sel(i+1).i_ReadDataChannel.RVALID      := w_if_mst_sel(i).i_ReadDataChannel.RVALID     
+      w_if_mst_sel(i+1).i_ReadDataChannel.RDATA       := w_if_mst_sel(i).i_ReadDataChannel.RDATA      
+
+      io.if_msts(i).i_WriteAddressChannel.AWREADY := 1.U
+      io.if_msts(i).i_WriteDataChannel.WREADY     := 1.U
       io.if_msts(i).i_WriteResponseChannel.BRESP  := 0.U
       io.if_msts(i).i_WriteResponseChannel.BVALID := 0.U
       io.if_msts(i).i_ReadDataChannel.RRESP       := 0.U
-      io.if_msts(i).i_ReadAddressChannel.ARREADY  := 0.U
-      io.if_msts(i).i_ReadDataChannel.RVALID      := 0.U
-      io.if_msts(i).i_ReadDataChannel.RDATA       := 0.U
-    }
-    w_if_mst_sel(i) := io.if_msts(i)
-    w_if_mst_sel(i).i_WriteAddressChannel.AWREADY := 0.U
-    w_if_mst_sel(i).i_WriteDataChannel.WREADY     := 0.U
-    w_if_mst_sel(i).i_WriteResponseChannel.BRESP  := 0.U
-    w_if_mst_sel(i).i_WriteResponseChannel.BVALID := 0.U
-    w_if_mst_sel(i).i_ReadDataChannel.RRESP       := 0.U
-    w_if_mst_sel(i).i_ReadAddressChannel.ARREADY  := 0.U
-    w_if_mst_sel(i).i_ReadDataChannel.RVALID      := 0.U
-    w_if_mst_sel(i).i_ReadDataChannel.RDATA       := 0.U
+      io.if_msts(i).i_ReadAddressChannel.ARREADY  := 1.U
+      io.if_msts(i).i_ReadDataChannel.RVALID      := 1.U
+      io.if_msts(i).i_ReadDataChannel.RDATA       := 0xFFFF.U
 
-    // w_if_mst_sel(i) <> w_if_mst_sel(i+1)
-//    when((AWVALID===1.U) || (ARVALID===1.U)){
-//      w_if_mst_sel(i) <> io.if_msts(i)
-//    }.otherwise {
-//    }
+    }
   }
 }
 
